@@ -13,6 +13,9 @@ try:
 except Exception as e:
     print(e)
 
+server = config['DEFAULT']['server']
+database = config['DEFAULT']['database']
+
 # get station data from petl table
 stations = petl.util.base.dicts(stationsTable)
 for station in stations:
@@ -41,7 +44,7 @@ for station in stations:
                 fileData = petl.io.csv.fromcsv('data/temp.csv')
                 # write data to SQL database
                 # initiate connection
-                conn = pymssql.connect(server='localhost', database='weather')
+                conn = pymssql.connect(server=server, database=database)
                 cursor = conn.cursor()
                 # create petl table from data in temporary file
                 fileData = petl.io.csv.fromcsv('data/temp.csv')

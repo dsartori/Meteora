@@ -34,6 +34,7 @@ select * from observations
 where @bbox.STContains(geometry::Point(longitude,latitude,4326)) = 1
 
 -- annual high temperature for stations inside the bounding poly
+-- you'll need to execute the code to set up the polygon as well
 select 
 	[name],
 	year(observation_date),

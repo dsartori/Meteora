@@ -31,7 +31,10 @@ for station in stations:
         for month in range(1, 13):
                 print('processing ' + station['Station ID'] + ' ' + str(year) + '-' + str(month) + '...')
                 url = 'http://climate.weather.gc.ca/climate_data/bulk_data_e.html?format=csv&stationID=%s&Year=%s&Month=%s&timeframe=2&submit=Download+Data' % (station['Station ID'], year, month)
-                data = requests.get(url).text
+                try:
+                     data = requests.get(url).text
+                except Exception as e:
+                    print(e)
                 # petl doesn't like dealing with CSVs in memory, so we'll use the csv module to read the data into a dictionary
                 csv_data = csv.DictReader(data.splitlines())
                 conn = pymssql.connect(server=server, database=database)
@@ -39,9 +42,12 @@ for station in stations:
                 # insert data into SQL database
                 for row in csv_data:
                     # create SQL query
-                    query = 'INSERT INTO weather.dbo.observations (%s) VALUES (%s)' % ('climate_id, [name], longitude, latitude, observation_date, max_temp, min_temp, rain_mm, snow_mm, precip_mm, snow_accumulation, max_gust', " try_cast('" + str(row['Climate ID'])+"' as varchar(20)),try_cast('" + str(row['Station Name'])+"' as varchar(255)),try_cast('" + str(row['Longitude (x)'])+"' as float), try_cast('" + str(row['Latitude (y)'])+"' as float),try_cast('" + str(row['Date/Time'])+"' as date),try_cast('" + str(row['Max Temp (°C)'])+"' as float),try_cast('" + str(row['Min Temp (°C)'])+"' as float), try_cast('" + str(row['Total Rain (mm)']) +"' as float),try_cast('" + str(row['Total Snow (cm)']) +"' as float),try_cast('" + str(row['Total Precip (mm)'])+"' as float),try_cast('" + str(row['Snow on Grnd (cm)'])+"' as float),try_cast('" + str(row['Spd of Max Gust (km/h)']) + "' as float)")
+                    query = 'INSERT INTO weather.dbo.observations (%s) VALUES (%s)' % ('climate_id, [name], longitude, latitude, observation_date, max_temp, min_temp, rain_mm, snow_mm, precip_mm, snow_accumulation, max_gust', " try_cast('" + str(row['Climate ID'])+"' as varchar(20)),try_cast('" + str(row['Station Name']).replace("'","''")+"' as varchar(255)),try_cast('" + str(row['Longitude (x)'])+"' as float), try_cast('" + str(row['Latitude (y)'])+"' as float),try_cast('" + str(row['Date/Time'])+"' as date),try_cast('" + str(row['Max Temp (°C)'])+"' as float),try_cast('" + str(row['Min Temp (°C)'])+"' as float), try_cast('" + str(row['Total Rain (mm)']) +"' as float),try_cast('" + str(row['Total Snow (cm)']) +"' as float),try_cast('" + str(row['Total Precip (mm)'])+"' as float),try_cast('" + str(row['Snow on Grnd (cm)'])+"' as float),try_cast('" + str(row['Spd of Max Gust (km/h)']) + "' as float)")
                     # execute query
-                    cursor.execute(query, tuple(row.values()))
+                    try:
+                         cursor.execute(query, tuple(row.values()))
+                    except Exception as e:
+                        print(e)
                     # commit changes
                     conn.commit()
                 # close connection
